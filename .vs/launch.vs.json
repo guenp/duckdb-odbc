@@ -1,0 +1,25 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "dll",
+      "exe": "",
+      "project": "CMakeLists.txt",
+      "projectTarget": "duckdb_odbc.dll (tools\\odbc\\bin\\duckdb_odbc.dll)",
+      "name": "duckdb_odbc.dll (tools\\odbc\\bin\\duckdb_odbc.dll)"
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "test_odbc.exe (bin\\test_odbc.exe)",
+      "name": "test_odbc.exe (bin\\test_odbc.exe)"
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "test_connection_odbc.exe (bin\\test_connection_odbc.exe)",
+      "name": "test_connection_odbc.exe (bin\\test_connection_odbc.exe)"
+    }
+  ]
+}

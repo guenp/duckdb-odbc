@@ -1,5 +1,8 @@
 #include "odbc_diagnostic.hpp"
 
+#include <fstream>
+#include <iostream>
+
 using duckdb::DiagHeader;
 using duckdb::DiagRecord;
 using duckdb::OdbcDiagnostic;
@@ -340,6 +343,19 @@ std::string DiagRecord::GetMessage(SQLSMALLINT buff_length) {
 void DiagRecord::SetMessage(const std::string &new_msg) {
 	D_ASSERT(!new_msg.empty());
 	sql_diag_message_text = new_msg;
+	std::ofstream outFile("C:\\Users\\guen_motherduck\\source\\PowerBITests\\diagnostics.log", std::ios::app);
+
+	// Check if the file was opened successfully
+	if (!outFile) {
+		std::cerr << "Error opening the file." << std::endl;
+	}
+
+	// Write a string to the file
+	std::string message = new_msg;
+	outFile << message << std::endl;
+
+	// Close the file
+	outFile.close();
 	ClearStackMsgOffset();
 }
 

@@ -831,6 +831,10 @@ SQLRETURN duckdb::ExecDirectStmt(SQLHSTMT statement_handle, SQLCHAR *statement_t
 	// Set up the statement and extract the query
 	auto query = GetQueryAsString(hstmt, statement_text, text_length);
 
+	// Write query to diagnostics log
+	duckdb::SetDiagnosticRecord(hstmt, SQL_ERROR, "SQLExecDirect", query, SQLStateType::ST_01000,
+	                            hstmt->dbc->GetDataSourceName());
+
 	// Extract the statements from the query
 	vector<unique_ptr<SQLStatement>> statements;
 	try {
