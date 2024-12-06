@@ -16,103 +16,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  odbc-linux-amd64:
-    name: ODBC Linux (amd64)
-    runs-on: ubuntu-latest
-    container:
-      image: quay.io/pypa/manylinux2014_x86_64
-    env:
-      GEN: ninja
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ inputs.git_ref }}
-
-      - uses: ./.github/actions/manylinux_2014_setup
-        with:
-          ninja-build: 1
-          ccache: 1
-          python_alias: 1
-          aws-cli: 1
-          odbc: 1
-
-      - name: Build
-        shell: bash
-        run: make release
-
-      - name: ODBC Tests
-        shell: bash
-        if: ${{ inputs.skip_tests != 'true' }}
-        run: ./build/release/test/test_odbc
-      - name: Deploy
-        shell: bash
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.S3_DUCKDB_STAGING_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_DUCKDB_STAGING_KEY }}
-        run: |
-          zip -j duckdb_odbc-linux-amd64.zip build/release/libduckdb_odbc.so linux_setup/unixodbc_setup.sh linux_setup/update_odbc_path.py
-          ./scripts/upload-assets-to-staging.sh github_release duckdb_odbc-linux-amd64.zip
-      - uses: actions/upload-artifact@v3
-        with:
-          name: odbc-linux-amd64
-          path: |
-            duckdb_odbc-linux-amd64.zip
-
-  odbc-linux-aarch64:
-    name: ODBC Linux (aarch64)
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:18.04
-    needs: odbc-linux-amd64
-    env:
-      GEN: ninja
-      DUCKDB_PLATFORM: linux_arm64
-      ODBC_CONFIG: ../../build/unixodbc/build/bin/odbc_config
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ inputs.git_ref }}
-
-      - uses: ./.github/actions/ubuntu_18_setup
-        with:
-          ccache: 1
-          aarch64_cross_compile: 1
-
-      - name: Install unixODBC
-        shell: bash
-        run: | # we need an x86 odbc_config tool to run cmake. fun.
-          apt-get remove -y unixodbc unixodbc-dev
-          CC=gcc ./scripts/install_unixodbc.sh
-          cp build/unixodbc/build/bin/odbc_config .
-          CC=aarch64-linux-gnu-gcc ./scripts/install_unixodbc.sh --host aarch64-linux-gnu
-          cp odbc_config build/unixodbc/build/bin/odbc_config
-
-      - name: Build
-        shell: bash
-        run: CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ make release
-
-      - name: Deploy
-        shell: bash
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.S3_DUCKDB_STAGING_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_DUCKDB_STAGING_KEY }}
-        run: |
-          zip -j duckdb_odbc-linux-aarch64.zip build/release/libduckdb_odbc.so linux_setup/unixodbc_setup.sh linux_setup/update_odbc_path.py
-          ./scripts/upload-assets-to-staging.sh github_release duckdb_odbc-linux-aarch64.zip
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: odbc-linux-aarch64
-          path: |
-            duckdb_odbc-linux-aarch64.zip
-
 
   odbc-windows-amd64:
     name: ODBC Windows (amd64)
     runs-on: windows-latest
-    needs: odbc-linux-amd64
     steps:
       - uses: actions/checkout@v4
         with:
@@ -196,60 +103,6 @@ jobs:
           path: |
             duckdb_odbc-windows-amd64.zip
 
-
-  odbc-osx-universal:
-    name: ODBC OSX (Universal)
-    runs-on: macos-14
-    env:
-      GEN: ninja
-      ODBC_CONFIG: ../../build/unixodbc/build/bin/odbc_config
-      OSX_BUILD_UNIVERSAL: 1
-    needs: odbc-linux-amd64
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ inputs.git_ref }}
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Setup Ccache
-        uses: hendrikmuhs/ccache-action@main
-        with:
-          key: ${{ github.job }}
-          save: ${{ github.ref == 'refs/heads/main' }}
-
-      - name: Install Ninja
-        run: brew install ninja
-
-      - name: Install UnixODBC
-        shell: bash
-        run: CFLAGS="-arch x86_64 -arch arm64" ./scripts/install_unixodbc.sh
-      - name: Build
-        shell: bash
-        run: make release
-      - name: ODBC Tests
-        if: ${{ inputs.skip_tests != 'true' }}
-        shell: bash
-        run: ./build/release/test/test_odbc
-      - name: See if this actually universal
-        shell: bash
-        run: lipo -archs build/release/libduckdb_odbc.dylib | grep "x86_64 arm64"
-      - name: Deploy
-        shell: bash
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.S3_DUCKDB_STAGING_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_DUCKDB_STAGING_KEY }}
-        run: |
-          zip -j duckdb_odbc-osx-universal.zip build/release/libduckdb_odbc.dylib
-          ./scripts/upload-assets-to-staging.sh github_release duckdb_odbc-osx-universal.zip
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: odbc-osx-universal
-          path: |
-            duckdb_odbc-osx-universal.zip
-
   debug:
     name: ODBC Tests
     if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
@@ -326,4 +179,3 @@ jobs:
       - name: Test Python ODBC
         shell: bash
         run: ./test/run_pyodbc_tests.sh
-
