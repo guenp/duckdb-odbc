@@ -343,7 +343,7 @@ std::string DiagRecord::GetMessage(SQLSMALLINT buff_length) {
 void DiagRecord::SetMessage(const std::string &new_msg) {
 	D_ASSERT(!new_msg.empty());
 	sql_diag_message_text = new_msg;
-	std::ofstream outFile("C:\\Users\\Guen Prawiroatmodjo\\duckdb-odbc\\diagnostics.log", std::ios::app);
+	std::ofstream outFile("C:\\duckdb-odbc-diagnostics.log", std::ios::app);
 
 	// Check if the file was opened successfully
 	if (!outFile) {
