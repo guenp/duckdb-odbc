@@ -57,7 +57,7 @@ jobs:
     name: ODBC Linux (aarch64)
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:18.04
+      image: ubuntu:22.04
     needs: odbc-linux-amd64
     env:
       GEN: ninja
@@ -69,7 +69,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ inputs.git_ref }}
 
-      - uses: ./.github/actions/ubuntu_18_setup
+      - uses: ./.github/actions/ubuntu_22_setup
         with:
           ccache: 1
           aarch64_cross_compile: 1
