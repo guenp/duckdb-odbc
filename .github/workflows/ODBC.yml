@@ -1,4 +1,4 @@
-name: JDBC
+name: ODBC
 on:
   push:
   pull_request:
@@ -18,7 +18,7 @@ jobs:
     env:
       GEN: ninja
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ inputs.git_ref }}
@@ -47,7 +47,7 @@ jobs:
         run: |
           zip -j duckdb_odbc-linux-amd64.zip build/release/libduckdb_odbc.so linux_setup/unixodbc_setup.sh linux_setup/update_odbc_path.py
           ./scripts/upload-assets-to-staging.sh github_release duckdb_odbc-linux-amd64.zip
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: odbc-linux-amd64
           path: |
@@ -64,7 +64,7 @@ jobs:
       DUCKDB_PLATFORM: linux_arm64
       ODBC_CONFIG: ../../build/unixodbc/build/bin/odbc_config
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ inputs.git_ref }}
@@ -96,7 +96,7 @@ jobs:
           zip -j duckdb_odbc-linux-aarch64.zip build/release/libduckdb_odbc.so linux_setup/unixodbc_setup.sh linux_setup/update_odbc_path.py
           ./scripts/upload-assets-to-staging.sh github_release duckdb_odbc-linux-aarch64.zip
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: odbc-linux-aarch64
           path: |
@@ -108,7 +108,7 @@ jobs:
     runs-on: windows-latest
     needs: odbc-linux-amd64
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ inputs.git_ref }}
@@ -140,7 +140,7 @@ jobs:
           zip -j duckdb_odbc-windows-amd64.zip ./build/release/bin/Release/duckdb_odbc.dll
           ./scripts/upload-assets-to-staging.sh github_release duckdb_odbc-windows-amd64.zip
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: odbc-windows-amd64
           path: |
@@ -156,7 +156,7 @@ jobs:
       OSX_BUILD_UNIVERSAL: 1
     needs: odbc-linux-amd64
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ inputs.git_ref }}
@@ -194,7 +194,7 @@ jobs:
           zip -j duckdb_odbc-osx-universal.zip build/release/libduckdb_odbc.dylib
           ./scripts/upload-assets-to-staging.sh github_release duckdb_odbc-osx-universal.zip
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: java-osx-universal
           path: |
@@ -210,7 +210,7 @@ jobs:
       GEN: ninja
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
