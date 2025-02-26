@@ -27,6 +27,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: duckdb/duckdb
+          ref: v1.2.0
           path: .git/duckdb
           fetch-depth: 0
 
@@ -40,10 +41,11 @@ jobs:
           git config --global user.email "github_bot@duckdblabs.com"
           git config --global user.name "DuckDB Labs GitHub Bot"
           git rm -rf src/duckdb
+          export REV=$(cd .git/duckdb; git rev-parse --short HEAD)
+          echo "Updating vendored DuckDB sources to $REV"
           python vendor.py --duckdb .git/duckdb
           git add src/duckdb CMakeLists.txt
           rm -rf .git/duckdb
-          export REV=`git rev-parse --short HEAD`
           git commit -m "Update vendored DuckDB sources to $REV"
           git push --dry-run
           # Check if ahead of upstream branch
