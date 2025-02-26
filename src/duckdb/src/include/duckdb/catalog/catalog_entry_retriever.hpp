@@ -56,7 +56,7 @@ public:
 	                                           OnEntryNotFound on_entry_not_found = OnEntryNotFound::THROW_EXCEPTION,
 	                                           QueryErrorContext error_context = QueryErrorContext());
 
-	const CatalogSearchPath &GetSearchPath() const;
+	CatalogSearchPath &GetSearchPath();
 	void SetSearchPath(vector<CatalogSearchEntry> entries);
 
 	void SetCallback(catalog_entry_callback_t callback);

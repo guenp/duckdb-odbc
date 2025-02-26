@@ -76,7 +76,7 @@ void CatalogEntryRetriever::Inherit(const CatalogEntryRetriever &parent) {
 	this->search_path = parent.search_path;
 }
 
-const CatalogSearchPath &CatalogEntryRetriever::GetSearchPath() const {
+CatalogSearchPath &CatalogEntryRetriever::GetSearchPath() {
 	if (search_path) {
 		return *search_path;
 	}
