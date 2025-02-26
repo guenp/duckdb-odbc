@@ -1096,7 +1096,6 @@ typedef struct PGCommonTableExpr {
 	int location;     /* token location, or -1 if unknown */
 	/* These fields are set during parse analysis: */
 	bool cterecursive;        /* is this CTE actually recursive? */
-	PGList *recursive_keys;
 	int cterefcount;          /* number of RTEs referencing this CTE
 								 * (excluding internal self-references) */
 	PGList *ctecolnames;      /* list of output column names */
@@ -1290,7 +1289,6 @@ typedef struct PGSelectStmt {
 	PGSetOperation op;         /* type of set op */
 	bool all;                  /* ALL specified? */
 	bool from_first;           /* FROM first or SELECT first */
-	bool offset_first;         /* OFFSET first or LIMIT first */
 	struct PGNode *larg; /* left child */
 	struct PGNode *rarg; /* right child */
 	                           /* Eventually add fields for CORRESPONDING spec here */

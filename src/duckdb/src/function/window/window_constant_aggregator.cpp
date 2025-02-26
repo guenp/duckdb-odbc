@@ -18,10 +18,6 @@ public:
 
 	void Finalize(const FrameStats &stats);
 
-	~WindowConstantAggregatorGlobalState() override {
-		statef.Destroy();
-	}
-
 	//! Partition starts
 	vector<idx_t> partition_offsets;
 	//! Reused result state container for the window functions
@@ -308,7 +304,11 @@ void WindowConstantAggregator::Finalize(WindowAggregatorState &gstate, WindowAgg
 	lastate.statef.Combine(gastate.statef);
 	lastate.statef.Destroy();
 
-	gastate.statef.Finalize(*gastate.results);
+	//	Last one out turns off the lights!
+	if (++gastate.finalized == gastate.locals) {
+		gastate.statef.Finalize(*gastate.results);
+		gastate.statef.Destroy();
+	}
 }
 
 unique_ptr<WindowAggregatorState> WindowConstantAggregator::GetLocalState(const WindowAggregatorState &gstate) const {

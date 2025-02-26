@@ -225,11 +225,10 @@ static void ThrowExtensionSetUnrecognizedOptions(const case_insensitive_map_t<Va
 }
 
 void DatabaseInstance::LoadExtensionSettings() {
-	// copy the map, to protect against modifications during
-	auto unrecognized_options_copy = config.options.unrecognized_options;
+	auto &unrecognized_options = config.options.unrecognized_options;
 
 	if (config.options.autoload_known_extensions) {
-		if (unrecognized_options_copy.empty()) {
+		if (unrecognized_options.empty()) {
 			// Nothing to do
 			return;
 		}
@@ -238,7 +237,7 @@ void DatabaseInstance::LoadExtensionSettings() {
 		con.BeginTransaction();
 
 		vector<string> extension_options;
-		for (auto &option : unrecognized_options_copy) {
+		for (auto &option : unrecognized_options) {
 			auto &name = option.first;
 			auto &value = option.second;
 
@@ -255,17 +254,18 @@ void DatabaseInstance::LoadExtensionSettings() {
 			if (it == config.extension_parameters.end()) {
 				throw InternalException("Extension %s did not provide the '%s' config setting", extension_name, name);
 			}
-			// if the extension provided the option, it should no longer be unrecognized.
-			D_ASSERT(config.options.unrecognized_options.find(name) == config.options.unrecognized_options.end());
 			auto &context = *con.context;
 			PhysicalSet::SetExtensionVariable(context, it->second, name, SetScope::GLOBAL, value);
 			extension_options.push_back(name);
 		}
 
+		for (auto &option : extension_options) {
+			unrecognized_options.erase(option);
+		}
 		con.Commit();
 	}
-	if (!config.options.unrecognized_options.empty()) {
-		ThrowExtensionSetUnrecognizedOptions(config.options.unrecognized_options);
+	if (!unrecognized_options.empty()) {
+		ThrowExtensionSetUnrecognizedOptions(unrecognized_options);
 	}
 }
 

@@ -491,7 +491,7 @@ void CSVSniffer::RefineCandidates() {
 
 	for (idx_t i = 1; i <= options.sample_size_chunks; i++) {
 		vector<unique_ptr<ColumnCountScanner>> successful_candidates;
-		bool done = candidates.empty();
+		bool done = false;
 		for (auto &cur_candidate : candidates) {
 			const bool finished_file = cur_candidate->FinishedFile();
 			if (successful_candidates.empty()) {
