@@ -319,7 +319,6 @@ typedef struct PGAStar {
 	PGList *replace_list; /* optional: REPLACE list */
 	PGList *rename_list;  /* optional: RENAME list */
 	bool columns;         /* whether or not this is a columns list */
-	bool unpacked;        /* whether or not the columns list is unpacked */
 	int location;
 } PGAStar;
 
@@ -1488,7 +1487,8 @@ typedef enum PGAlterTableType {
 	PG_AT_DetachPartition,           /* DETACH PARTITION */
 	PG_AT_AddIdentity,               /* ADD IDENTITY */
 	PG_AT_SetIdentity,               /* SET identity column options */
-	AT_DropIdentity                  /* DROP IDENTITY */
+	AT_DropIdentity,                 /* DROP IDENTITY */
+	PG_AT_SetPartitionedBy           /* SET PARTITIONED BY */
 } PGAlterTableType;
 
 typedef struct PGAlterTableCmd /* one subcommand of an ALTER TABLE */
@@ -1497,8 +1497,8 @@ typedef struct PGAlterTableCmd /* one subcommand of an ALTER TABLE */
 	PGAlterTableType subtype; /* Type of table alteration to apply */
 	char *name;               /* column, constraint, or trigger to act on,
 								 * or tablespace */
-	PGNode *def;              /* definition of new column, index,
-								 * constraint, or parent table */
+	PGNode *def;              /* definition of new column, index, * constraint, or parent table */
+	PGList *def_list;         /* e.g. expression list for partitioned by */
 	PGDropBehavior behavior;  /* RESTRICT or CASCADE for DROP cases */
 	bool missing_ok;          /* skip error if missing? */
 } PGAlterTableCmd;
