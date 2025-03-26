@@ -186,7 +186,7 @@ typedef enum duckdb_statement_type {
 	DUCKDB_STATEMENT_TYPE_DETACH = 26,
 	DUCKDB_STATEMENT_TYPE_MULTI = 27,
 } duckdb_statement_type;
-//! An enum over DuckDB's different error types.
+//! An enum over DuckDB's different result types.
 typedef enum duckdb_error_type {
 	DUCKDB_ERROR_INVALID = 0,
 	DUCKDB_ERROR_OUT_OF_RANGE = 1,
@@ -242,14 +242,11 @@ typedef enum duckdb_cast_mode { DUCKDB_CAST_NORMAL = 0, DUCKDB_CAST_TRY = 1 } du
 //! DuckDB's index type.
 typedef uint64_t idx_t;
 
-//! Type used for the selection vector
-typedef uint32_t sel_t;
-
 //! The callback that will be called to destroy data, e.g.,
 //! bind data (if any), init data (if any), extra data for replacement scans (if any)
 typedef void (*duckdb_delete_callback_t)(void *data);
 
-//! Used for threading, contains a task state. Must be destroyed with `duckdb_destroy_task_state`.
+//! Used for threading, contains a task state. Must be destroyed with `duckdb_destroy_state`.
 typedef void *duckdb_task_state;
 
 //===--------------------------------------------------------------------===//
@@ -393,12 +390,6 @@ typedef struct {
 typedef struct _duckdb_vector {
 	void *internal_ptr;
 } * duckdb_vector;
-
-//! A selection vector is a possibly duplicative vector of indices, which refer to values in a vector.
-//! The resulting vector is make up of the values at each index in the selection vector.
-typedef struct _duckdb_selection_vector {
-	void *internal_ptr;
-} * duckdb_selection_vector;
 
 //===--------------------------------------------------------------------===//
 // Types (explicit freeing/destroying)
@@ -887,7 +878,7 @@ query fails, otherwise the error stored within the result will not be freed corr
 DUCKDB_C_API duckdb_state duckdb_query(duckdb_connection connection, const char *query, duckdb_result *out_result);
 
 /*!
-Closes the result and de-allocates all memory allocated for that result.
+Closes the result and de-allocates all memory allocated for that connection.
 
 * @param result The result to destroy.
 */
@@ -2546,14 +2537,6 @@ Returns the STRUCT child at index as a duckdb_value.
 */
 DUCKDB_C_API duckdb_value duckdb_get_struct_child(duckdb_value value, idx_t index);
 
-/*!
-Returns the SQL string representation of the given value.
-
-* @param value A duckdb_value.
-* @return The SQL string representation as a null-terminated string. The result must be freed with `duckdb_free`.
-*/
-DUCKDB_C_API char *duckdb_value_to_string(duckdb_value value);
-
 //===--------------------------------------------------------------------===//
 // Logical Type Interface
 //===--------------------------------------------------------------------===//
@@ -3047,19 +3030,6 @@ The resulting vector has the size of the parent vector multiplied by the array s
 */
 DUCKDB_C_API duckdb_vector duckdb_array_vector_get_child(duckdb_vector vector);
 
-/*!
-Slice a vector with a selection vector.
-
-The max value in the selection vector must be less than the length of the vector
-
-The resulting vector happens to be a dictionary vector.
-
-* @param vector The vector which is to become a dictionary
-* @param selection The selection vector
-* @param len The length of the selection vector
-*/
-DUCKDB_C_API void duckdb_slice_vector(duckdb_vector vector, duckdb_selection_vector selection, idx_t len);
-
 //===--------------------------------------------------------------------===//
 // Validity Mask Functions
 //===--------------------------------------------------------------------===//
@@ -3144,7 +3114,8 @@ duckdb_scalar_function_add_parameter.
 DUCKDB_C_API void duckdb_scalar_function_set_varargs(duckdb_scalar_function scalar_function, duckdb_logical_type type);
 
 /*!
-Sets the scalar function's null-handling behavior to special.
+Sets the parameters of the given scalar function to varargs. Does not require adding parameters with
+duckdb_scalar_function_add_parameter.
 
 * @param scalar_function The scalar function.
 */
@@ -3181,7 +3152,7 @@ Assigns extra information to the scalar function that can be fetched during bind
 
 * @param scalar_function The scalar function
 * @param extra_info The extra information
-* @param destroy The callback that will be called to destroy the extra information (if any)
+* @param destroy The callback that will be called to destroy the bind data (if any)
 */
 DUCKDB_C_API void duckdb_scalar_function_set_extra_info(duckdb_scalar_function scalar_function, void *extra_info,
                                                         duckdb_delete_callback_t destroy);
@@ -3263,25 +3234,6 @@ If the set is incomplete or a function with this name already exists DuckDBError
 * @return Whether or not the registration was successful.
 */
 DUCKDB_C_API duckdb_state duckdb_register_scalar_function_set(duckdb_connection con, duckdb_scalar_function_set set);
-
-//===--------------------------------------------------------------------===//
-// Selection Vector Interface
-//===--------------------------------------------------------------------===//
-
-/*!
-Creates a new selection vector of size `size`.
-*/
-DUCKDB_C_API duckdb_selection_vector duckdb_create_selection_vector(idx_t size);
-
-/*!
-Destroys a selection vector.
-*/
-DUCKDB_C_API void duckdb_destroy_selection_vector(duckdb_selection_vector vector);
-
-/*!
-Access the data pointer of a selection vector.
-*/
-DUCKDB_C_API sel_t *duckdb_selection_vector_get_data_ptr(duckdb_selection_vector vector);
 
 //===--------------------------------------------------------------------===//
 // Aggregate Functions
@@ -3379,7 +3331,7 @@ Assigns extra information to the scalar function that can be fetched during bind
 
 * @param aggregate_function The aggregate function
 * @param extra_info The extra information
-* @param destroy The callback that will be called to destroy the extra information (if any)
+* @param destroy The callback that will be called to destroy the bind data (if any)
 */
 DUCKDB_C_API void duckdb_aggregate_function_set_extra_info(duckdb_aggregate_function aggregate_function,
                                                            void *extra_info, duckdb_delete_callback_t destroy);
@@ -3491,7 +3443,7 @@ Assigns extra information to the table function that can be fetched during bindi
 
 * @param table_function The table function
 * @param extra_info The extra information
-* @param destroy The callback that will be called to destroy the extra information (if any)
+* @param destroy The callback that will be called to destroy the bind data (if any)
 */
 DUCKDB_C_API void duckdb_table_function_set_extra_info(duckdb_table_function table_function, void *extra_info,
                                                        duckdb_delete_callback_t destroy);
